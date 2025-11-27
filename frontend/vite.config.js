@@ -23,6 +23,7 @@ export default defineConfig({
     include: ['@vuepic/vue-datepicker']
   },
   build: {
+    target: 'esnext',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -30,5 +31,8 @@ export default defineConfig({
         }
       }
     }
+  },
+  define: {
+    'process.env': {}
   }
 })
