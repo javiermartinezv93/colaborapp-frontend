@@ -231,7 +231,7 @@ defineExpose({ clearDrawing })
 </script>
 
 <template>
-  <div class="relative w-full h-full min-h-[300px] min-w-[300px]">
+  <div class="flex w-full h-full">
     <div ref="mapContainer" class="w-full h-full rounded-lg"></div>
     <div class="absolute bottom-4 left-4 z-[1000] bg-white/90 px-3 py-2 rounded-lg shadow-md">
       <div v-if="isPolygonMode" class="flex items-center gap-2 text-sm">

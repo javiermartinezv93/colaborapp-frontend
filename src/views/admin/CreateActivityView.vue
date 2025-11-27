@@ -144,9 +144,9 @@ function goBack() {
 </script>
 
 <template>
-  <div class="flex flex-col h-[calc(100vh-8rem)]">
+  <div class="flex flex-col h-[calc(100vh-6rem)]">
     <!-- Header -->
-    <div class="flex items-center gap-4 mb-6">
+    <div class="flex items-center gap-4 mb-6 flex-shrink-0">
       <button class="btn btn-ghost btn-sm btn-square" @click="goBack">
         <ArrowLeftIcon class="w-5 h-5" />
       </button>
@@ -158,14 +158,14 @@ function goBack() {
 
     <form @submit.prevent="handleSubmit" class="flex flex-col flex-1 min-h-0">
       <!-- Submit error -->
-      <div v-if="errors.submit" class="alert alert-error mb-6">
+      <div v-if="errors.submit" class="alert alert-error mb-6 flex-shrink-0">
         <ExclamationCircleIcon class="w-5 h-5" />
         <span>{{ errors.submit }}</span>
       </div>
 
       <div class="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
         <!-- Left column - Form fields (narrower) -->
-        <div class="w-full lg:w-1/3 space-y-6">
+        <div class="w-full lg:w-2/5 space-y-6 flex-shrink-0">
           <!-- Basic info card -->
           <div class="card bg-base-100 shadow">
             <div class="card-body">
@@ -289,9 +289,9 @@ function goBack() {
 
         <!-- Right column - Map (takes remaining space) -->
         <div class="w-full lg:flex-1 min-w-0">
-          <div class="card bg-base-100 shadow h-full min-h-[400px]">
-            <div class="card-body h-full flex flex-col">
-              <h2 class="card-title text-lg">
+          <div class="card bg-base-100 shadow h-full">
+            <div class="card-body h-full flex flex-col ">
+              <h2 class="card-title text-lg flex-shrink-0">
                 <MapPinIcon class="w-5 h-5 text-primary" />
                 Ubicación
                 <span 
@@ -303,16 +303,8 @@ function goBack() {
                   {{ form.type === 'casa_a_casa' ? 'Dibujar área' : 'Marcar punto' }}
                 </span>
               </h2>
-
-              <p class="text-sm text-base-content/60">
-                {{ form.type === 'casa_a_casa' 
-                  ? 'Dibuja el polígono del área donde se realizará la actividad casa a casa.' 
-                  : 'Marca el punto de encuentro para el volanteo.' 
-                }}
-              </p>
-
               <div 
-                class="flex-1 rounded-lg overflow-hidden border border-base-300 mt-2 min-h-[300px]"
+                class="flex-1 rounded-lg overflow-hidden border border-base-300 mt-2"
                 :class="{ 'border-error': errors.geometry }"
               >
                 <ActivityFormMap 
@@ -321,7 +313,7 @@ function goBack() {
                 />
               </div>
 
-              <label v-if="errors.geometry" class="label">
+              <label v-if="errors.geometry" class="label flex-shrink-0">
                 <span class="label-text-alt text-error">{{ errors.geometry }}</span>
               </label>
             </div>
