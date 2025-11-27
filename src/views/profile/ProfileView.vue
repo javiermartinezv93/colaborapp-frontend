@@ -13,6 +13,7 @@ const loading = ref(false)
 const editing = ref(false)
 const error = ref(null)
 const success = ref(false)
+const phoneError = ref(null)
 
 const formData = ref({
   username: '',
@@ -35,9 +36,19 @@ onMounted(() => {
 async function handleSubmit() {
   error.value = null
   success.value = false
+  phoneError.value = null
   loading.value = true
 
   try {
+    // Validate phone format if provided
+    const phone = formData.value.phone_number?.trim()
+    const phoneRegex = /^\+56\s?9\s?\d{4}\s?\d{4}$/
+    if (phone && !phoneRegex.test(phone)) {
+      phoneError.value = 'Formato de teléfono inválido. Use +56 9 1234 5678'
+      loading.value = false
+      return
+    }
+
     const response = await api.put('/users/me', formData.value)
     
     // Update auth store with new user data
@@ -202,6 +213,7 @@ function cancelEdit() {
               class="input input-bordered input-sm"
               maxlength="20"
             />
+              <p v-if="phoneError" class="text-xs text-error mt-1">{{ phoneError }}</p>
           </div>
 
           <!-- Form Actions -->

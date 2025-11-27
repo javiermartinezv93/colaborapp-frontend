@@ -67,6 +67,38 @@ export const useUsersStore = defineStore('users', () => {
     }
   }
 
+  async function updateUser(id, payload) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await api.put(`/users/${id}`, payload)
+      // Update local cache
+      const idx = users.value.findIndex(u => u.id === id)
+      if (idx !== -1) users.value[idx] = response.data
+      return response.data
+    } catch (err) {
+      error.value = err.response?.data?.detail || 'Error al actualizar usuario'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function deleteUser(id) {
+    loading.value = true
+    error.value = null
+    try {
+      await api.delete(`/users/${id}`)
+      users.value = users.value.filter(u => u.id !== id)
+      return true
+    } catch (err) {
+      error.value = err.response?.data?.detail || 'Error al eliminar usuario'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   function getRoleLabel(role) {
     return roles.value.find(r => r.value === role)?.label || role
   }
@@ -86,6 +118,8 @@ export const useUsersStore = defineStore('users', () => {
     fetchUsers,
     fetchInvitations,
     createInvitation,
+    updateUser,
+    deleteUser,
     getRoleLabel,
     getRoleColor
   }

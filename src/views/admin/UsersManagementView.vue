@@ -1,10 +1,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useUsersStore } from '@/stores/users'
+import { useAuthStore } from '@/stores/auth'
 import { UsersIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
 import dayjs from 'dayjs'
 
 const usersStore = useUsersStore()
+const authStore = useAuthStore()
 
 const loading = computed(() => usersStore.loading)
 const users = computed(() => usersStore.users)
@@ -26,6 +28,38 @@ onMounted(() => {
 
 function formatDate(dateStr) {
   return dayjs(dateStr).format('DD/MM/YYYY')
+}
+
+// Role options for the admin dropdown
+const roleOptions = [
+  { value: 'voluntario', label: 'Voluntario' },
+  { value: 'coordinador', label: 'Coordinador' },
+  { value: 'administrador', label: 'Administrador' }
+]
+
+async function onRoleChange(user, newRole) {
+  try {
+    await usersStore.updateUser(user.id, { role: newRole })
+  } catch (err) {
+    // error handled in store (it sets usersStore.error) — optionally show a toast later
+    console.error('Error updating role', err)
+  }
+}
+
+async function onDeleteUser(user) {
+  // Prevent deleting yourself
+  if (authStore.user?.id === user.id) {
+    alert('No puedes eliminar tu propia cuenta')
+    return
+  }
+
+  if (!confirm(`¿Eliminar usuario ${user.username}? Esta acción no se puede deshacer.`)) return
+
+  try {
+    await usersStore.deleteUser(user.id)
+  } catch (err) {
+    console.error('Error deleting user', err)
+  }
 }
 </script>
 
@@ -92,6 +126,7 @@ function formatDate(dateStr) {
                 <th>Teléfono</th>
                 <th>Rol</th>
                 <th>Fecha de registro</th>
+                <th v-if="authStore.isAdmin">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -112,6 +147,28 @@ function formatDate(dateStr) {
                 </td>
                 <td class="text-sm text-base-content/60">
                   {{ formatDate(user.created_at) }}
+                </td>
+                <td v-if="authStore.isAdmin" class="text-sm">
+                  <div class="flex items-center gap-2">
+                    <select
+                      :value="user.role"
+                      class="select select-sm"
+                      @change="e => onRoleChange(user, e.target.value)"
+                    >
+                      <option v-for="opt in roleOptions" :key="opt.value" :value="opt.value">
+                        {{ opt.label }}
+                      </option>
+                    </select>
+
+                    <button
+                      class="btn btn-sm btn-error"
+                      @click="() => onDeleteUser(user)"
+                      :disabled="user.id === authStore.user?.id"
+                      title="Eliminar usuario"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
