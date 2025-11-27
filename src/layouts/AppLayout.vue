@@ -147,13 +147,23 @@ function getRoleLabel(role) {
             </span>
           </div>
         </div>
-        <button 
-          class="btn btn-ghost btn-block btn-sm gap-2"
-          @click="handleLogout"
-        >
-          <ArrowRightOnRectangleIcon class="w-4 h-4" />
-          Cerrar Sesión
-        </button>
+        <div class="space-y-2">
+          <router-link 
+            to="/perfil"
+            class="btn btn-ghost btn-block btn-sm gap-2"
+            @click="sidebarOpen = false"
+          >
+            <UserCircleIcon class="w-4 h-4" />
+            Mi Perfil
+          </router-link>
+          <button 
+            class="btn btn-ghost btn-block btn-sm gap-2"
+            @click="handleLogout"
+          >
+            <ArrowRightOnRectangleIcon class="w-4 h-4" />
+            Cerrar Sesión
+          </button>
+        </div>
       </div>
     </aside>
 

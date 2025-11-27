@@ -32,6 +32,22 @@ export const useUsersStore = defineStore('users', () => {
     }
   }
 
+  async function fetchInvitations(skip = 0, limit = 100) {
+    loading.value = true
+    error.value = null
+    
+    try {
+      const response = await api.get('/users/invitations', { params: { skip, limit } })
+      invitations.value = response.data
+      return response.data
+    } catch (err) {
+      error.value = err.response?.data?.detail || 'Error al cargar invitaciones'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function createInvitation(email, roleAssigned) {
     loading.value = true
     error.value = null
@@ -68,6 +84,7 @@ export const useUsersStore = defineStore('users', () => {
     roles,
     // Actions
     fetchUsers,
+    fetchInvitations,
     createInvitation,
     getRoleLabel,
     getRoleColor

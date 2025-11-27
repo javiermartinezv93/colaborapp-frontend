@@ -10,6 +10,9 @@ import VolunteerActivitiesView from '@/views/volunteer/ActivitiesView.vue'
 import VolunteerMapView from '@/views/volunteer/MapView.vue'
 import ActivityDetailView from '@/views/volunteer/ActivityDetailView.vue'
 
+// Profile view
+import ProfileView from '@/views/profile/ProfileView.vue'
+
 // Admin/Coordinator views (modular)
 import DashboardView from '@/views/admin/DashboardView.vue'
 import ActivitiesManagementView from '@/views/admin/ActivitiesManagementView.vue'
@@ -63,6 +66,12 @@ const routes = [
     path: '/mapa',
     name: 'volunteer-map',
     component: VolunteerMapView,
+    meta: { requiresAuth: true, roles: ['voluntario', 'coordinador', 'administrador'] }
+  },
+  {
+    path: '/perfil',
+    name: 'profile',
+    component: ProfileView,
     meta: { requiresAuth: true, roles: ['voluntario', 'coordinador', 'administrador'] }
   },
 

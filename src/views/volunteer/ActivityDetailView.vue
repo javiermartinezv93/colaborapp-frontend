@@ -97,7 +97,10 @@ const attendanceCounts = computed(() => {
 async function setAttendance(status) {
   submittingAttendance.value = true
   try {
-    const result = await attendanceStore.registerAttendance(route.params.id, status)
+    const result = await attendanceStore.registerAttendance({
+      activity_id: route.params.id,
+      status
+    })
     myAttendance.value = result
     
     // Update local attendances

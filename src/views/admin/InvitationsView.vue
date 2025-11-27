@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useUsersStore } from '@/stores/users'
 import { 
   EnvelopeIcon, 
@@ -27,6 +27,15 @@ const roleOptions = [
   { value: 'voluntario', label: 'Voluntario' },
   { value: 'coordinador', label: 'Coordinador' }
 ]
+
+onMounted(async () => {
+  // Fetch existing invitations when component mounts
+  try {
+    await usersStore.fetchInvitations()
+  } catch (err) {
+    console.error('Error loading invitations:', err)
+  }
+})
 
 function openModal() {
   form.value = { email: '', role: 'voluntario' }

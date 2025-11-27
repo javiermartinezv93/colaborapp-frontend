@@ -32,23 +32,41 @@ export const useAttendanceStore = defineStore('attendance', () => {
     }
   }
 
-  async function registerAttendance(activityId, status) {
+  async function getActivityAttendance(activityId) {
     loading.value = true
     error.value = null
     
     try {
-      const response = await api.post(`/activities/${activityId}/attendance`, { status })
-      userAttendances.value[activityId] = response.data
+      const response = await api.get(`/activities/${activityId}/attendance`)
+      attendances.value[activityId] = response.data
+      return response.data
+    } catch (err) {
+      error.value = err.response?.data?.detail || 'Error al cargar asistencias'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function registerAttendance(data) {
+    loading.value = true
+    error.value = null
+    
+    try {
+      const response = await api.post(`/activities/${data.activity_id}/attendance`, { 
+        status: data.status 
+      })
+      userAttendances.value[data.activity_id] = response.data
       
       // Update attendances list if loaded
-      if (attendances.value[activityId]) {
-        const index = attendances.value[activityId].findIndex(
+      if (attendances.value[data.activity_id]) {
+        const index = attendances.value[data.activity_id].findIndex(
           a => a.user_id === response.data.user_id
         )
         if (index !== -1) {
-          attendances.value[activityId][index] = response.data
+          attendances.value[data.activity_id][index] = response.data
         } else {
-          attendances.value[activityId].push(response.data)
+          attendances.value[data.activity_id].push(response.data)
         }
       }
       
@@ -89,6 +107,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
     error,
     attendanceStatuses,
     // Actions
+    getActivityAttendance,
     fetchActivityAttendances,
     registerAttendance,
     getAttendanceStatusLabel,
