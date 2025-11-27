@@ -26,18 +26,33 @@ const mapContainer = ref(null)
 let map = null
 let drawnItems = null
 let drawControl = null
+let resizeObserver = null
 
-// Default center (Chile)
-const defaultCenter = [-33.4489, -70.6693]
+// Default center (Temuco, Chile)
+const defaultCenter = [-38.7359, -72.5904]
 const defaultZoom = 13
 
 const isPolygonMode = computed(() => props.activityType === 'casa_a_casa')
 
 onMounted(() => {
   initMap()
+  // Setup resize observer to handle container size changes
+  if (mapContainer.value) {
+    resizeObserver = new ResizeObserver(() => {
+      if (map) {
+        setTimeout(() => {
+          map.invalidateSize()
+        }, 100)
+      }
+    })
+    resizeObserver.observe(mapContainer.value)
+  }
 })
 
 onUnmounted(() => {
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+  }
   if (map) {
     map.remove()
     map = null
@@ -58,9 +73,45 @@ function initMap() {
 
   map = L.map(mapContainer.value).setView(defaultCenter, defaultZoom)
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  // Capas base
+  const streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
-  }).addTo(map)
+  })
+
+  const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+  })
+
+  // Capas de superposición
+  const transportation = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Esri'
+  })
+
+  const places = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Esri'
+  })
+
+  // Mapas base disponibles
+  const baseMaps = {
+    "Calles": streets,
+    "Satelital": satellite
+  }
+
+  // Capas de superposición
+  const overlays = {
+    "Calles": transportation,
+    "Lugares": places
+  }
+
+  // Agregar capa satelital por defecto
+  satellite.addTo(map)
+
+  // Agregar superposiciones por defecto
+  transportation.addTo(map)
+  places.addTo(map)
+
+  // Control de capas
+  L.control.layers(baseMaps, overlays).addTo(map)
 
   // Initialize feature group
   drawnItems = new L.FeatureGroup()
@@ -180,8 +231,8 @@ defineExpose({ clearDrawing })
 </script>
 
 <template>
-  <div class="relative">
-    <div ref="mapContainer" class="w-full h-[400px] rounded-lg"></div>
+  <div class="relative w-full h-full min-h-[300px] min-w-[300px]">
+    <div ref="mapContainer" class="w-full h-full rounded-lg"></div>
     <div class="absolute bottom-4 left-4 z-[1000] bg-white/90 px-3 py-2 rounded-lg shadow-md">
       <div v-if="isPolygonMode" class="flex items-center gap-2 text-sm">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">

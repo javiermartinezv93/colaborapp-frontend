@@ -14,8 +14,20 @@ export default defineConfig({
     port: 3002,
     proxy: {
       '/api': {
-        target: 'http://localhost:8001',
+        target: 'http://lajaraneta.cl:9090',
         changeOrigin: true
+      }
+    }
+  },
+  optimizeDeps: {
+    include: ['@vuepic/vue-datepicker']
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          datepicker: ['@vuepic/vue-datepicker']
+        }
       }
     }
   }

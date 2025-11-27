@@ -5,13 +5,13 @@ import router from '@/router'
 
 export const useAuthStore = defineStore('auth', () => {
   // State
-  const user = ref(null)
+  const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
   const token = ref(localStorage.getItem('token') || null)
   const loading = ref(false)
   const error = ref(null)
 
   // Getters
-  const isAuthenticated = computed(() => !!token.value && !!user.value)
+  const isAuthenticated = computed(() => !!token.value)
   const isAdmin = computed(() => user.value?.role === 'administrador')
   const isCoordinator = computed(() => user.value?.role === 'coordinador')
   const isVolunteer = computed(() => user.value?.role === 'voluntario')
@@ -88,22 +88,51 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await api.get('/users/me')
       user.value = response.data
+      localStorage.setItem('user', JSON.stringify(user.value))
     } catch (err) {
-      // Token invalid, clear auth
-      logout()
+      // Only logout if token is invalid (401/403), not on network errors
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        logout()
+      }
+      throw err
     }
   }
 
   async function checkAuth() {
-    if (token.value) {
+    if (!token.value) return false
+    
+    try {
       await fetchUser()
+      return true
+    } catch (err) {
+      // Token invalid, clear auth
+      logout()
+      return false
     }
+  }
+
+  async function initializeAuth() {
+    if (token.value && user.value) {
+      // We have both token and user, try to refresh user data
+      try {
+        await fetchUser()
+      } catch (err) {
+        // If refresh fails, keep the cached user data
+        console.warn('Failed to refresh user data:', err)
+      }
+      return true
+    } else if (token.value) {
+      // We have token but no user, fetch user
+      return await checkAuth()
+    }
+    return false
   }
 
   function logout() {
     user.value = null
     token.value = null
     localStorage.removeItem('token')
+    localStorage.removeItem('user')
     router.push({ name: 'login' })
   }
 
@@ -135,6 +164,7 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     fetchUser,
     checkAuth,
+    initializeAuth,
     validateInvitation
   }
 })

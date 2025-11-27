@@ -13,6 +13,7 @@ import {
   ArrowRightOnRectangleIcon,
   UserCircleIcon
 } from '@heroicons/vue/24/outline'
+import { mdiAccount } from '@mdi/js'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -131,40 +132,6 @@ function getRoleLabel(role) {
           <span>{{ item.name }}</span>
         </router-link>
       </nav>
-
-      <!-- User info at bottom -->
-      <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-base-300 bg-base-100">
-        <div class="flex items-center gap-3 mb-3">
-          <div class="avatar placeholder">
-            <div class="w-10 rounded-full bg-neutral text-neutral-content">
-              <UserCircleIcon class="w-6 h-6" />
-            </div>
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="font-medium truncate">{{ user?.username }}</p>
-            <span :class="['badge badge-sm', getRoleBadge(user?.role)]">
-              {{ getRoleLabel(user?.role) }}
-            </span>
-          </div>
-        </div>
-        <div class="space-y-2">
-          <router-link 
-            to="/perfil"
-            class="btn btn-ghost btn-block btn-sm gap-2"
-            @click="sidebarOpen = false"
-          >
-            <UserCircleIcon class="w-4 h-4" />
-            Mi Perfil
-          </router-link>
-          <button 
-            class="btn btn-ghost btn-block btn-sm gap-2"
-            @click="handleLogout"
-          >
-            <ArrowRightOnRectangleIcon class="w-4 h-4" />
-            Cerrar Sesión
-          </button>
-        </div>
-      </div>
     </aside>
 
     <!-- Main content -->
@@ -188,15 +155,33 @@ function getRoleLabel(role) {
           
           <!-- Quick actions -->
           <div class="flex items-center gap-2">
-            <!-- View activities link for admins -->
-            <router-link 
-              v-if="canManage"
-              to="/actividades"
-              class="btn btn-ghost btn-sm gap-1"
-            >
-              <CalendarIcon class="w-4 h-4" />
-              <span class="hidden sm:inline">Vista Simple</span>
-            </router-link>
+            <!-- User dropdown -->
+            <div class="dropdown dropdown-end">
+              <div tabindex="0" role="button" class="btn btn-ghost btn-sm gap-2 px-3 py-2">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path :d="mdiAccount" />
+                </svg>
+                <span class="hidden sm:inline font-medium">{{ user?.username }}</span>
+                <svg class="w-4 h-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+              <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow-lg bg-base-100 rounded-box w-56 border border-base-300">
+              
+                <li>
+                  <router-link to="/perfil" class="gap-3 py-2 px-4 rounded-lg hover:bg-base-200">
+                    <UserCircleIcon class="w-4 h-4" />
+                    <span class="font-medium">Mi Perfil</span>
+                  </router-link>
+                </li>
+                <li>
+                  <button @click="handleLogout" class="gap-3 py-2 px-4 rounded-lg text-error hover:bg-error hover:text-error-content w-full text-left">
+                    <ArrowRightOnRectangleIcon class="w-4 h-4" />
+                    <span class="font-medium">Cerrar Sesión</span>
+                  </button>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </header>

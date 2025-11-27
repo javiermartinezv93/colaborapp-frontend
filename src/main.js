@@ -6,7 +6,12 @@ import './assets/main.css'
 
 const app = createApp(App)
 
-app.use(createPinia())
+const pinia = createPinia()
+app.use(pinia)
 app.use(router)
+
+// Initialize auth check after pinia is ready
+const authStore = (await import('@/stores/auth')).useAuthStore()
+authStore.initializeAuth()
 
 app.mount('#app')

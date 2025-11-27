@@ -17,8 +17,8 @@ const mapContainer = ref(null)
 let map = null
 let layer = null
 
-// Default center (Chile)
-const defaultCenter = [-33.4489, -70.6693]
+// Default center (Temuco, Chile)
+const defaultCenter = [-38.7359, -72.5904]
 const defaultZoom = 13
 
 onMounted(() => {
@@ -36,9 +36,45 @@ function initMap() {
 
   map = L.map(mapContainer.value).setView(defaultCenter, defaultZoom)
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  // Capas base
+  const streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
-  }).addTo(map)
+  })
+
+  const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+  })
+
+  // Capas de superposición
+  const transportation = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Esri'
+  })
+
+  const places = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Esri'
+  })
+
+  // Mapas base disponibles
+  const baseMaps = {
+    "Calles": streets,
+    "Satelital": satellite
+  }
+
+  // Capas de superposición
+  const overlays = {
+    "Calles": transportation,
+    "Lugares": places
+  }
+
+  // Agregar capa satelital por defecto
+  satellite.addTo(map)
+
+  // Agregar superposiciones por defecto
+  transportation.addTo(map)
+  places.addTo(map)
+
+  // Control de capas
+  L.control.layers(baseMaps, overlays).addTo(map)
 
   updateMap()
 }
