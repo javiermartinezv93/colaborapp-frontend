@@ -3,6 +3,115 @@ import { ref, onMounted, watch, onUnmounted, computed } from 'vue'
 import L from 'leaflet'
 import 'leaflet-draw'
 import 'leaflet-draw/dist/leaflet.draw.css'
+import 'leaflet/dist/leaflet.css'
+
+// Configurar Leaflet en español
+L.drawLocal = {
+  draw: {
+    toolbar: {
+      actions: {
+        title: 'Cancelar dibujo',
+        text: 'Cancelar'
+      },
+      finish: {
+        title: 'Terminar dibujo',
+        text: 'Terminar'
+      },
+      undo: {
+        title: 'Eliminar último punto dibujado',
+        text: 'Eliminar último punto'
+      },
+      buttons: {
+        polyline: 'Dibujar una polilínea',
+        polygon: 'Dibujar un polígono',
+        rectangle: 'Dibujar un rectángulo',
+        circle: 'Dibujar un círculo',
+        marker: 'Dibujar un marcador',
+        circlemarker: 'Dibujar un marcador circular'
+      }
+    },
+    handlers: {
+      circle: {
+        tooltip: {
+          start: 'Haz clic y arrastra para dibujar un círculo.'
+        },
+        radius: 'Radio'
+      },
+      circlemarker: {
+        tooltip: {
+          start: 'Haz clic en el mapa para colocar un marcador circular.'
+        }
+      },
+      marker: {
+        tooltip: {
+          start: 'Haz clic en el mapa para colocar un marcador.'
+        }
+      },
+      polygon: {
+        tooltip: {
+          start: 'Haz clic para comenzar a dibujar la forma.',
+          cont: 'Haz clic para continuar dibujando la forma.',
+          end: 'Haz clic en el primer punto para cerrar esta forma.'
+        }
+      },
+      polyline: {
+        error: '<strong>Error:</strong> ¡Los bordes de la forma no se pueden cruzar!',
+        tooltip: {
+          start: 'Haz clic para comenzar a dibujar la línea.',
+          cont: 'Haz clic para continuar dibujando la línea.',
+          end: 'Haz clic en el último punto para terminar la línea.'
+        }
+      },
+      rectangle: {
+        tooltip: {
+          start: 'Haz clic y arrastra para dibujar un rectángulo.'
+        }
+      },
+      simpleshape: {
+        tooltip: {
+          end: 'Suelta el mouse para terminar de dibujar.'
+        }
+      }
+    }
+  },
+  edit: {
+    toolbar: {
+      actions: {
+        save: {
+          title: 'Guardar cambios',
+          text: 'Guardar'
+        },
+        cancel: {
+          title: 'Cancelar edición, descarta todos los cambios',
+          text: 'Cancelar'
+        },
+        clearAll: {
+          title: 'Limpiar todas las capas',
+          text: 'Limpiar todo'
+        }
+      },
+      buttons: {
+        edit: 'Editar capas',
+        editDisabled: 'No hay capas para editar',
+        remove: 'Eliminar capas',
+        removeDisabled: 'No hay capas para eliminar'
+      }
+    },
+    handlers: {
+      edit: {
+        tooltip: {
+          text: 'Arrastra las asas o el marcador para editar la característica.',
+          subtext: 'Haz clic en cancelar para deshacer los cambios.'
+        }
+      },
+      remove: {
+        tooltip: {
+          text: 'Haz clic en una característica para eliminarla.'
+        }
+      }
+    }
+  }
+}
 
 const props = defineProps({
   activityType: {
@@ -71,7 +180,26 @@ watch(() => props.activityType, () => {
 function initMap() {
   if (!mapContainer.value) return
 
-  map = L.map(mapContainer.value).setView(defaultCenter, defaultZoom)
+  // Configurar tooltips de zoom en español
+  L.Control.Zoom.prototype._updateDisabled = function() {
+    L.DomUtil.removeClass(this._zoomInButton, 'leaflet-disabled');
+    L.DomUtil.removeClass(this._zoomOutButton, 'leaflet-disabled');
+
+    if (this._disabled || this._zoom === this.options.minZoom) {
+      L.DomUtil.addClass(this._zoomOutButton, 'leaflet-disabled');
+    }
+    if (this._disabled || this._zoom === this.options.maxZoom) {
+      L.DomUtil.addClass(this._zoomInButton, 'leaflet-disabled');
+    }
+  }
+
+  map = L.map(mapContainer.value, {
+    zoomControl: true,
+    zoomControlOptions: {
+      zoomInTitle: 'Acercar',
+      zoomOutTitle: 'Alejar'
+    }
+  }).setView(defaultCenter, defaultZoom)
 
   // Capas base
   const streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -99,7 +227,7 @@ function initMap() {
 
   // Capas de superposición
   const overlays = {
-    "Calles": transportation,
+    "Transporte": transportation,
     "Lugares": places
   }
 
@@ -231,9 +359,9 @@ defineExpose({ clearDrawing })
 </script>
 
 <template>
-  <div class="flex w-full h-full">
+  <div class="relative w-full h-full">
     <div ref="mapContainer" class="w-full h-full rounded-lg"></div>
-    <div class="absolute bottom-4 left-4 z-[1000] bg-white/90 px-3 py-2 rounded-lg shadow-md">
+    <div class="absolute bottom-8 left-5 z-[1000] bg-white/90 px-3 py-2 rounded-lg shadow-md">
       <div v-if="isPolygonMode" class="flex items-center gap-2 text-sm">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />

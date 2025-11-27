@@ -2,14 +2,15 @@
 import { computed, onMounted } from 'vue'
 import { useActivitiesStore } from '@/stores/activities'
 import { useAuthStore } from '@/stores/auth'
-import ActivityCard from '@/components/activities/ActivityCard.vue'
+import ActivityTableRow from '@/components/activities/ActivityTableRow.vue'
 import ActivityFilters from '@/components/activities/ActivityFilters.vue'
-import { CalendarIcon, FunnelIcon } from '@heroicons/vue/24/outline'
+import { CalendarIcon, FunnelIcon, TableCellsIcon } from '@heroicons/vue/24/outline'
+import dayjs from 'dayjs'
 
 const activitiesStore = useActivitiesStore()
 const authStore = useAuthStore()
 
-const activities = computed(() => activitiesStore.filteredActivities)
+const activities = computed(() => activitiesStore.filteredActivities.filter(activity => dayjs(activity.start_datetime).isAfter(dayjs())))
 const loading = computed(() => activitiesStore.loading)
 
 onMounted(() => {
@@ -23,7 +24,7 @@ onMounted(() => {
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold flex items-center gap-2">
-          <CalendarIcon class="w-7 h-7 text-primary" />
+          <TableCellsIcon class="w-7 h-7 text-primary" />
           Actividades
         </h1>
         <p class="text-base-content/60 mt-1">
@@ -47,7 +48,7 @@ onMounted(() => {
       <p class="text-base-content/60 mt-1">
         No se encontraron actividades con los filtros seleccionados
       </p>
-      <button 
+      <button
         class="btn btn-ghost btn-sm mt-4"
         @click="activitiesStore.clearFilters()"
       >
@@ -56,13 +57,29 @@ onMounted(() => {
       </button>
     </div>
 
-    <!-- Activities grid -->
-    <div v-else class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <ActivityCard
-        v-for="activity in activities"
-        :key="activity.id"
-        :activity="activity"
-      />
+    <!-- Activities table -->
+    <div v-else class="bg-base-100 rounded-lg shadow overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="table table-zebra w-full">
+          <thead class="bg-base-200">
+            <tr>
+              <th class="font-semibold">Actividad</th>
+              <th class="font-semibold">Tipo</th>
+              <th class="font-semibold">Fecha y Hora</th>
+              <th class="font-semibold">Estado</th>
+              <th class="font-semibold">Mi Asistencia</th>
+              <th class="font-semibold">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ActivityTableRow
+              v-for="activity in activities"
+              :key="activity.id"
+              :activity="activity"
+            />
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </template>

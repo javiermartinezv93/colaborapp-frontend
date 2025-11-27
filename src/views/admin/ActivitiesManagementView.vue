@@ -1,8 +1,9 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useActivitiesStore } from '@/stores/activities'
 import { useAuthStore } from '@/stores/auth'
+import { useAttendanceStore } from '@/stores/attendance'
 import ActivityFilters from '@/components/activities/ActivityFilters.vue'
 import { 
   CalendarIcon, 
@@ -18,16 +19,73 @@ import dayjs from 'dayjs'
 const router = useRouter()
 const activitiesStore = useActivitiesStore()
 const authStore = useAuthStore()
+const attendanceStore = useAttendanceStore()
 
-const activities = computed(() => activitiesStore.filteredActivities)
+const activities = computed(() => activitiesStore.filteredActivities.filter(activity => dayjs(activity.start_datetime).isAfter(dayjs())))
 const loading = computed(() => activitiesStore.loading)
+const attendanceData = ref(new Map())
+const submittingAttendance = ref(new Set())
 
 onMounted(() => {
   activitiesStore.fetchActivities()
+  loadAttendanceData()
 })
+
+// Watch for filtered activities changes to reload attendance data
+watch(() => activities.value, () => {
+  loadAttendanceData()
+}, { deep: true })
+
+async function loadAttendanceData() {
+  for (const activity of activities.value) {
+    if (activity.status === 'programada') {
+      try {
+        const data = await attendanceStore.getActivityAttendance(activity.id)
+        attendanceData.value.set(activity.id, data)
+      } catch (error) {
+        console.error(`Error loading attendance for activity ${activity.id}:`, error)
+      }
+    }
+  }
+}
 
 function formatDate(dateStr) {
   return dayjs(dateStr).format('DD/MM/YYYY HH:mm')
+}
+
+function getMyAttendance(activityId) {
+  const data = attendanceData.value.get(activityId) || []
+  return data.find(a => a.user_id === authStore.user?.id)
+}
+
+async function setAttendance(activityId, status) {
+  submittingAttendance.value.add(activityId)
+  try {
+    const result = await attendanceStore.registerAttendance({
+      activity_id: activityId,
+      status
+    })
+    // Update local data
+    const data = attendanceData.value.get(activityId) || []
+    const index = data.findIndex(a => a.user_id === authStore.user?.id)
+    if (status === '') {
+      // Remove attendance if status is empty
+      if (index !== -1) {
+        data.splice(index, 1)
+      }
+    } else {
+      if (index !== -1) {
+        data[index] = result
+      } else {
+        data.push(result)
+      }
+    }
+    attendanceData.value.set(activityId, data)
+  } catch (error) {
+    console.error('Error registering attendance:', error)
+  } finally {
+    submittingAttendance.value.delete(activityId)
+  }
 }
 
 function canEdit(activity) {
@@ -107,6 +165,7 @@ async function handleFinish(activity) {
                 <th>Tipo</th>
                 <th>Fecha/Hora</th>
                 <th>Estado</th>
+                <th>Mi Asistencia</th>
                 <th>Creador</th>
                 <th class="text-right">Acciones</th>
               </tr>
@@ -142,6 +201,28 @@ async function handleFinish(activity) {
                   >
                     {{ activitiesStore.getActivityStatusLabel(activity.status) }}
                   </span>
+                </td>
+                <td>
+                  <div v-if="activity.status === 'programada'">
+                    <select
+                      class="select select-sm select-bordered"
+                      :style="{
+                        'background-color': getMyAttendance(activity.id)?.status === 'asistira' ? '#dcfce7' : getMyAttendance(activity.id)?.status === 'quizas_asistira' ? '#fef3c7' : getMyAttendance(activity.id)?.status === 'no_asistira' ? '#fee2e2' : 'transparent',
+                        'border-color': getMyAttendance(activity.id)?.status === 'asistira' ? '#16a34a' : getMyAttendance(activity.id)?.status === 'quizas_asistira' ? '#d97706' : getMyAttendance(activity.id)?.status === 'no_asistira' ? '#dc2626' : '#d1d5db'
+                      }"
+                      :value="getMyAttendance(activity.id)?.status || ''"
+                      :disabled="submittingAttendance.has(activity.id)"
+                      @change="setAttendance(activity.id, $event.target.value)"
+                    >
+                      <option value="">Sin confirmar</option>
+                      <option value="asistira">Asistiré</option>
+                      <option value="quizas_asistira">Quizás</option>
+                      <option value="no_asistira">No asistiré</option>
+                    </select>
+                  </div>
+                  <div v-else class="text-sm text-base-content/60">
+                    N/A
+                  </div>
                 </td>
                 <td class="text-sm text-base-content/60">
                   {{ activity.creator?.username || 'N/A' }}
