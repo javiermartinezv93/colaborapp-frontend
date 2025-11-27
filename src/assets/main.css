@@ -1,0 +1,96 @@
+/* Leaflet core styles - must be first */
+@import 'leaflet/dist/leaflet.css';
+@import 'leaflet-draw/dist/leaflet.draw.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Leaflet fixes */
+.leaflet-container {
+  z-index: 0;
+}
+
+.leaflet-pane {
+  z-index: 1;
+}
+
+.leaflet-control {
+  z-index: 10;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Activity status colors */
+.status-programada {
+  @apply bg-info text-info-content;
+}
+
+.status-cancelada {
+  @apply bg-error text-error-content;
+}
+
+.status-finalizada {
+  @apply bg-success text-success-content;
+}
+
+/* Activity type colors */
+.type-casa_a_casa {
+  @apply bg-primary text-primary-content;
+}
+
+.type-volanteo {
+  @apply bg-secondary text-secondary-content;
+}
+
+/* Map container */
+.map-container {
+  @apply w-full h-full min-h-[400px];
+}
+
+/* Loading overlay */
+.loading-overlay {
+  @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
+}
+
+/* Transitions */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 0.3s ease;
+}
+
+.slide-enter-from {
+  transform: translateX(-100%);
+}
+
+.slide-leave-to {
+  transform: translateX(-100%);
+}
